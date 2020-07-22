@@ -1,6 +1,6 @@
 registerPlugin({
     name: 'Darkness Functions',
-    version: '0.4.2',
+    version: '0.4.3',
     description: 'Vezi balanta sau transferi zincoins fara sa te conectezi pe identitatea botului / reconectare la interval.',
     author: 'Darkness.',
     vars: [{
