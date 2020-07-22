@@ -62,6 +62,17 @@ registerPlugin({
                     if (zin != null) zin.chat('!balance');
                     else patron.chat('Nu pot vorbi inca cu ZinGuard, el trebuie sa faca primul pas...');
                 }
+                else if (ev.text === '!reconnect')
+                {
+                    patron.chat('M-am dus!');
+                    engine.log('[Darkness Functions] Deconectare bot... (!reconnect)');
+                    backend.disconnect();
+
+                    setTimeout(() => {
+                        backend.connect();
+                        engine.log('[Darkness Functions] Bot reconectat! (!reconnect)');
+                    }, 3000);
+                }
             }
         }
         else if (ev.client.uid() === identitatebot) // identiatea ZinGuard
