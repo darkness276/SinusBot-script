@@ -66,7 +66,10 @@ registerPlugin({
                 {
                     patron.chat('M-am dus!');
                     engine.log('[Darkness Functions] Deconectare bot... (!reconnect)');
-                    backend.disconnect();
+
+                    setTimeout(() => {
+                        backend.disconnect();
+                    }, 500);
 
                     setTimeout(() => {
                         backend.connect();
