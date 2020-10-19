@@ -1,6 +1,6 @@
 registerPlugin({
     name: 'Darkness Functions',
-    version: '0.4.4',
+    version: '0.4.3',
     description: 'Vezi balanta sau transferi zincoins fara sa te conectezi pe identitatea botului / reconectare la interval.',
     author: 'Darkness.',
     vars: [{
@@ -17,26 +17,8 @@ registerPlugin({
         type: 'number',
         placeholder: '0',
         default: 0
-    }, {
-        name: 'idle_time',
-        title: 'Idle mutare boti (minute)',
-        type: 'number',
-        placeholder: '0',
-        default: 0
-    }, {
-        name: 'canale_de_mutat',
-        title: 'Lista cu canale pe care se muta botul cand are idle-ul setat anterior (check la fiecare 10 minute)',
-        type: 'array',
-        vars: [
-            {
-                name: 'canale_de_mutatx',
-                indent: 1,
-                title: 'Canal',
-                type: 'channel'
-            }
-        ]
     }]
-}, (_, { identitate, identitatebot, interval, canale_de_mutat, idle_time }) => {
+}, (_, { identitate, identitatebot, interval }) => {
 
     // librarii
     var engine = require('engine');
@@ -45,7 +27,6 @@ registerPlugin({
 
     var zin = null; // Client ZinGuard
     var verifica = null; // trimite de 2 ori !transfer pentru a ma asigura
-    var countCanal = 0;
 
     event.on('chat', function(ev) {
         if (!ev.client) return; // in caz de bug
@@ -144,40 +125,4 @@ registerPlugin({
             engine.log('[Darkness Functions] Bot reconectat!');
         }, 3000);
     }, interval * 3600000);
-
-    // mutare bot
-    setInterval(() => {
-        var patron = null; // Clientul celui care are acces
-        patron = backend.getClientByUID(identitate);
-
-        if (canale_de_mutat.length > 1) // verifica daca are cel putin doua canale
-        {
-            var botx = backend.getBotClient();
-            var stop = false;
-            //engine.log('Idle: ' + botx.getIdleTime())
-
-            if (botx.getIdleTime() >= idle_time * 60000) // verifica idle
-            {
-                canale_de_mutat.forEach(function (item, index, array) {
-                    //engine.log('Test: ' + index + ", x: " + item.canale_de_mutatx.toString());
-                    if (countCanal == index && !stop) // treci la canalul urmator sau ia-o de la capat
-                    {
-                        stop = true;
-                        botx.moveTo(backend.getChannelByID(item.canale_de_mutatx)); // muta
-                        countCanal = countCanal + 1;
-                        if (canale_de_mutat.length == index+1) // verifica daca a ajuns la ultimul canal din lista
-                        {
-                            countCanal = 0; // ia-o de la capat
-                        }
-                    }
-                });
-                engine.log('[Darkness Functions - plimbareala] Ma mut...');
-
-                //patron.chat('Salut patroane, m-am mutat!');
-            }
-            else engine.log('[Darkness Functions - plimbareala] Nu ai idle mare.');
-        }
-        else engine.log('[Darkness Functions - plimbareala] Nici un canal setat.');
-        
-    }, 10 * 60000);
 });
