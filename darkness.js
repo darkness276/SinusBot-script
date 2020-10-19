@@ -1,7 +1,7 @@
 registerPlugin({
     name: 'Darkness Functions',
-    version: '0.4.3',
-    description: 'Vezi balanta sau transferi zincoins fara sa te conectezi pe identitatea botului / reconectare la interval.',
+    version: '0.4.5',
+    description: 'Functii pentru ts.indungi.ro. Made with 💚 by Darkness.',
     author: 'Darkness.',
     vars: [{
         name: 'identitate',
@@ -17,8 +17,14 @@ registerPlugin({
         type: 'number',
         placeholder: '0',
         default: 0
+    }, {
+        name: 'intervalReconnect',
+        title: 'Verificare bot online (1-60 de minute)',
+        type: 'number',
+        placeholder: '0',
+        default: 0
     }]
-}, (_, { identitate, identitatebot, interval }) => {
+}, (_, { identitate, identitatebot, interval, intervalReconnect }) => {
 
     // librarii
     var engine = require('engine');
@@ -115,14 +121,36 @@ registerPlugin({
         return;
     }
 
-    // reconectare la 5 ore
-    setInterval(() => {
-        engine.log('[Darkness Functions] Deconectare bot...');
-        backend.disconnect();
+    // reconectare la interval setat
+    if (interval > 0)
+    {
+        setInterval(() => {
+            engine.log('[Darkness Functions] Deconectare bot...');
+            backend.disconnect();
 
-        setTimeout(() => {
-            backend.connect();
-            engine.log('[Darkness Functions] Bot reconectat!');
-        }, 3000);
-    }, interval * 3600000);
+            setTimeout(() => {
+                backend.connect();
+                engine.log('[Darkness Functions] Bot reconectat!');
+            }, 3000);
+        }, interval * 3600000);
+    }
+
+    if (intervalReconnect < 0 || intervalReconnect > 60)
+    {
+        engine.log('[Darkness Functions] Intervalul trebuie sa fie intre 0 (dezactivat) si 60 de minute. Setat automat pe 0.');
+        intervalReconnect = 0;
+        return;
+    }
+
+    // conectare automata la 5 minute
+    if (intervalReconnect > 0)
+    {
+        setInterval(() => {
+            if (!backend.isConnected())
+            {
+                backend.connect();
+                engine.log('[Darkness Functions] Bot reconectat automat - '+ intervalReconnect +' minute!');
+            }
+        }, intervalReconnect * 60000);
+    }
 });
