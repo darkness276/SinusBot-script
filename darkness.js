@@ -66,7 +66,7 @@ registerPlugin({
             {
                 if (ev.text.indexOf('!transfer') != -1)
                 {
-                    if (zin == null) return patron.chat('Nu pot vorbi inca cu ZinGuard, el trebuie sa faca primul pas...'); // fiind ZinGuard query, nu client, nu poate sa-i dea mesaj decat daca ii da el unul
+                    if (zin == null) return patron.chat('Nu pot vorbi inca cu ZinGuard, el trebuie sa faca primul pas...'); // daca nu primeste mesaj de la zinguard, nu poate vorbi cu el
                     if (verifica === ev.text) zin.chat(ev.text);
                     else {
                         verifica = ev.text;
