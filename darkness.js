@@ -1,6 +1,6 @@
 registerPlugin({
     name: 'Darkness Functions',
-    version: '0.4.5',
+    version: '0.4.6',
     description: 'Functii pentru ts.indungi.ro. Made with 💚 by Darkness.',
     author: 'Darkness.',
     vars: [{
@@ -17,14 +17,8 @@ registerPlugin({
         type: 'number',
         placeholder: '0',
         default: 0
-    }, {
-        name: 'intervalReconnect',
-        title: 'Verificare bot online (1-60 de minute)',
-        type: 'number',
-        placeholder: '0',
-        default: 0
     }]
-}, (_, { identitate, identitatebot, interval, intervalReconnect }) => {
+}, (_, { identitate, identitatebot, interval }, meta) => {
 
     // librarii
     var engine = require('engine');
@@ -33,6 +27,22 @@ registerPlugin({
 
     var zin = null; // Client ZinGuard
     var verifica = null; // trimite de 2 ori !transfer pentru a ma asigura
+
+    // privilegii
+    const ENQUEUE           = 1 << 13;
+    const SKIP_QUEUE        = 1 << 14;
+    const ADMIN_QUEUE       = 1 << 15;
+    const PLAYBACK          = 1 << 12;
+    /*const START_STOP        = 1 <<  8;
+    const EDIT_BOT_SETTINGS = 1 << 16;
+    const LOGIN             = 1 <<  0;
+    const UPLOAD_FILES      = 1 <<  2;
+    const DELETE_FILES      = 1 <<  3;
+    const EDIT_FILES        = 1 <<  4;
+    const CREATE_AND_DELETE_PLAYLISTS = 1 << 5;
+    const EDIT_PLAYLISTS    = 1 <<  7;
+    const EDIT_INSTANCES    = 1 << 17;
+    const EDIT_USERS        = 1 <<  9;*/
 
     event.on('chat', function(ev) {
         if (!ev.client) return; // in caz de bug
@@ -82,6 +92,53 @@ registerPlugin({
                         engine.log('[Darkness Functions] Bot reconectat! (!reconnect)');
                     }, 3000);
                 }
+                else if (ev.text.indexOf('!adduser') != -1) // identitate, nume
+                {
+                    let cuvinte = ev.text.split(" ");
+                    if (cuvinte[0] !== '!adduser') return;
+                    if (cuvinte[1] == null || cuvinte[2] == null) return ev.client.chat('Trebuie sa folosesti !adduser [identitate] [nume]');
+                    if (cuvinte[1].length != 28 || cuvinte[1][27] !== '=') return ev.client.chat('Formatul identitatii este invalid!');
+                    let user = engine.addUser(cuvinte[2]); // adaugare user
+                    if (user)
+                    {
+                        // setare identitate
+                        user.setUid(cuvinte[1]);
+                        // adaugare accese pentru muzica
+                        user.addPrivilege(ENQUEUE);
+                        user.addPrivilege(SKIP_QUEUE);
+                        user.addPrivilege(ADMIN_QUEUE);
+                        user.addPrivilege(PLAYBACK);
+                        ev.client.chat('Userul [URL=client://0/'+cuvinte[1]+'~'+cuvinte[2]+']'+cuvinte[2]+'[/URL] a fost adaugat cu succes!');
+                    }
+                    else ev.client.chat('Nu s-a putut crea un user cu acest nume.');
+                }
+                else if (ev.text.indexOf('!removeuser') != -1) // nume
+                {
+                    let cuvinte = ev.text.split(" ");
+                    if (cuvinte[0] !== '!removeuser') return;
+                    if (cuvinte[1] == null) return ev.client.chat('Trebuie sa folosesti !removeuser [nume]');
+                    let user = engine.getUserByName(cuvinte[1]);
+                    if (user)
+                    {
+                        ev.client.chat('Userul [URL=client://0/'+user.uid()+'~'+user.name()+']'+user.name()+'[/URL] a fost sters cu succes!');
+                        user.delete();
+                    }
+                    else ev.client.chat('User inexistent.');
+                }
+                else if (ev.text === '!users') // lista cu userii
+                {
+                    ev.client.chat('Useri inregistrati:');
+                    var users = engine.getUsers();
+                    var msg = '';
+                    users.forEach(u => {
+                        msg += '[URL=client://0/'+u.uid()+'~'+u.name()+']'+u.name()+'[/URL]\n';
+                    });
+                    ev.client.chat(msg);
+                }
+                else if (ev.text === '!version' || ev.text === '!v')
+                {
+                    patron.chat('Darkness Functions v' + meta.version + ' by [URL=client://0/ooDBgS+7EIE4Nr3wx9AB76fcbx8=~Darkness]Darkness.[/URL] 💚');
+                }
             }
         }
         else if (ev.client.uid() === identitatebot) // identiatea ZinGuard
@@ -97,6 +154,13 @@ registerPlugin({
         {
             switch (ev.text)
             {
+                // 1234
+                case "!version":
+                    ev.client.chat('Darkness Functions v' + meta.version + ' by [URL=client://0/ooDBgS+7EIE4Nr3wx9AB76fcbx8=~Darkness]Darkness.[/URL] 💚');
+                    break;
+                case "!v":
+                    ev.client.chat('Darkness Functions v' + meta.version + ' by [URL=client://0/ooDBgS+7EIE4Nr3wx9AB76fcbx8=~Darkness]Darkness.[/URL] 💚');
+                    break;
                 case "darkness":
                     ev.client.chat('Darkness este o persoana exceptionala :)');
                     break;
@@ -133,24 +197,5 @@ registerPlugin({
                 engine.log('[Darkness Functions] Bot reconectat!');
             }, 3000);
         }, interval * 3600000);
-    }
-
-    if (intervalReconnect < 0 || intervalReconnect > 60)
-    {
-        engine.log('[Darkness Functions] Intervalul trebuie sa fie intre 0 (dezactivat) si 60 de minute. Setat automat pe 0.');
-        intervalReconnect = 0;
-        return;
-    }
-
-    // conectare automata la 5 minute
-    if (intervalReconnect > 0)
-    {
-        setInterval(() => {
-            if (!backend.isConnected())
-            {
-                backend.connect();
-                engine.log('[Darkness Functions] Bot reconectat automat - '+ intervalReconnect +' minute!');
-            }
-        }, intervalReconnect * 60000);
     }
 });
